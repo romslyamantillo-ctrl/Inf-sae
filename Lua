@@ -1,0 +1,221 @@
+-- =====================================================================
+-- AMANTILLO HUB V1.0 - STEAL AN EGG AUTOMATION ENGINE
+-- DEVELOPER EDITION OPTIMIZED FOR DELTA/MOBILE INJECTION
+-- =====================================================================
+
+if game.CoreGui:FindFirstChild("AmantilloHubPanel") then
+    game.CoreGui.AmantilloHubPanel:Destroy()
+end
+
+local Players = game:GetService("Players")
+local Player = Players.LocalPlayer
+local TweenService = game:GetService("TweenService")
+local CoreGui = game:GetService("CoreGui")
+
+-- 1. BYPASS LAYER: Anti-Kick Metatable Hook Interceptor
+pcall(function()
+    local mt = getrawmetatable(game)
+    local oldNamecall = mt.__namecall
+    setreadonly(mt, false)
+    
+    mt.__namecall = newcclosure(function(self, ...)
+        local method = getnamecallmethod()
+        if method == "Kick" or method == "kick" then
+            print("[Amantillo Security] Blocked server kick attempt.")
+            return nil -- Drops the execution line to bypass disconnects
+        end
+        return oldNamecall(self, ...)
+    end)
+    setreadonly(mt, true)
+end)
+
+-- 2. UI LAYER: Mobile-Safe Clean Layout Setup
+local AmantilloHubPanel = Instance.new("ScreenGui")
+AmantilloHubPanel.Name = "AmantilloHubPanel"
+AmantilloHubPanel.Parent = CoreGui
+AmantilloHubPanel.ResetOnSpawn = false
+
+local MainFrame = Instance.new("Frame")
+MainFrame.Size = UDim2.new(0, 330, 0, 300)
+MainFrame.Position = UDim2.new(0.5, -165, 0.4, -150)
+MainFrame.BackgroundColor3 = Color3.fromRGB(12, 18, 12) -- Dark Matrix Green
+MainFrame.BorderSizePixel = 0
+MainFrame.Active = true
+MainFrame.Draggable = true 
+MainFrame.Parent = AmantilloHubPanel
+
+local MainCorner = Instance.new("UICorner")
+MainCorner.CornerRadius = UDim.new(0, 10)
+MainCorner.Parent = MainFrame
+
+-- Title Banner Header
+local Title = Instance.new("TextLabel")
+Title.Size = UDim2.new(1, 0, 0, 45)
+Title.BackgroundColor3 = Color3.fromRGB(18, 35, 22) -- Bright Accent Green
+Title.Text = "   Amantillo Hub - Steal An Egg"
+Title.TextColor3 = Color3.fromRGB(255, 255, 255)
+Title.TextSize = 16
+Title.Font = Enum.Font.SourceSansBold
+Title.TextXAlignment = Enum.TextXAlignment.Left
+Title.Parent = MainFrame
+
+local TitleCorner = Instance.new("UICorner")
+TitleCorner.CornerRadius = UDim.new(0, 10)
+TitleCorner.Parent = Title
+
+-- UI Status Monitor Text Box
+local Monitor = Instance.new("TextLabel")
+Monitor.Size = UDim2.new(1, -20, 0, 50)
+Monitor.Position = UDim2.new(0, 10, 0, 55)
+Monitor.BackgroundColor3 = Color3.fromRGB(20, 25, 20)
+Monitor.Text = "Status: Monitoring Active Session\nMode: Secure Travel Mode Engaged"
+Monitor.TextColor3 = Color3.fromRGB(150, 220, 150)
+Monitor.TextSize = 13
+Monitor.Font = Enum.Font.SourceSansItalic
+Monitor.Parent = MainFrame
+
+local MonitorCorner = Instance.new("UICorner")
+MonitorCorner.CornerRadius = UDim.new(0, 6)
+MonitorCorner.Parent = Monitor
+
+-- Close Button Element
+local Close = Instance.new("TextButton")
+Close.Size = UDim2.new(0, 40, 0, 45)
+Close.Position = UDim2.new(1, -40, 0, 0)
+Close.BackgroundTransparency = 1
+Close.Text = "✕"
+Close.TextColor3 = Color3.fromRGB(255, 90, 90)
+Close.TextSize = 18
+Close.Font = Enum.Font.SourceSansBold
+Close.Parent = MainFrame
+Close.MouseButton1Click:Connect(function() AmantilloHubPanel:Destroy() end)
+
+-- Button Layout Container
+local Container = Instance.new("Frame")
+Container.Size = UDim2.new(1, -20, 1, -120)
+Container.Position = UDim2.new(0, 10, 0, 115)
+Container.BackgroundTransparency = 1
+Container.Parent = MainFrame
+
+local Layout = Instance.new("UIListLayout")
+Layout.Padding = UDim.new(0, 8)
+Layout.Parent = Container
+
+-- Engine Custom Toggle Compiler UI Helper
+local function CreateToggle(name, callback)
+    local Tgl = Instance.new("TextButton")
+    Tgl.Size = UDim2.new(1, 0, 0, 40)
+    Tgl.BackgroundColor3 = Color3.fromRGB(25, 35, 25)
+    Tgl.Text = name .. " [OFF]"
+    Tgl.TextColor3 = Color3.fromRGB(180, 200, 180)
+    Tgl.TextSize = 14
+    Tgl.Font = Enum.Font.SourceSans
+    Tgl.Parent = Container
+    
+    local Corner = Instance.new("UICorner")
+    Corner.CornerRadius = UDim.new(0, 6)
+    Corner.Parent = Tgl
+    
+    local active = false
+    Tgl.MouseButton1Click:Connect(function()
+        active = not active
+        if active then
+            Tgl.BackgroundColor3 = Color3.fromRGB(40, 130, 65) -- Active State Green
+            Tgl.Text = name .. " [ON]"
+            Tgl.TextColor3 = Color3.fromRGB(255, 255, 255)
+        else
+            Tgl.BackgroundColor3 = Color3.fromRGB(25, 35, 25)
+            Tgl.Text = name .. " [OFF]"
+            Tgl.TextColor3 = Color3.fromRGB(180, 200, 180)
+        end
+        task.spawn(callback, active)
+    end)
+end
+
+-- 3. CORE LOGIC: Smooth Linear Interpolation Movement (No Instant Teleports)
+local function SafeMoveTo(targetCFrame)
+    local char = Player.Character
+    local root = char and char:FindFirstChild("HumanoidRootPart")
+    if not root then return end
+    
+    local distance = (root.Position - targetCFrame.Position).Magnitude
+    local speed = 26 -- Calculated speed threshold to slip under Anticheat scanners
+    local duration = distance / speed
+    
+    if duration > 3.5 then duration = 3.5 end -- Keeps tracking seamless
+    
+    local tween = TweenService:Create(root, TweenInfo.new(duration, Enum.EasingStyle.Linear), {CFrame = targetCFrame})
+    tween:Play()
+    tween.Completed:Wait()
+end
+
+-- ==================== COMPILED AUTOMATION FEATURES ====================
+
+-- Toggle 1: Auto Steal Strategy
+CreateToggle("Auto Steal Nearest Eggs", function(state)
+    _G.AmantilloSteal = state
+    while _G.AmantilloSteal do
+        task.wait(0.5)
+        pcall(function()
+            local eggs = workspace:FindFirstChild("Eggs") or workspace:FindFirstChild("ActiveEggs")
+            local personalBase = workspace:FindFirstChild(Player.Name .. "Base") or workspace:FindFirstChild("Bases"):FindFirstChild(Player.Name)
+            
+            if eggs and personalBase then
+                for _, egg in ipairs(eggs:GetChildren()) do
+                    if _G.AmantilloSteal and (egg:IsA("BasePart") or egg:FindFirstChildWhichIsA("BasePart")) then
+                        local eggPart = egg:IsA("BasePart") and egg or egg:FindFirstChildWhichIsA("BasePart")
+                        
+                        Monitor.Text = "Status: Transporting to target egg..."
+                        SafeMoveTo(eggPart.CFrame + Vector3.new(0, 1.5, 0))
+                        task.wait(0.4)
+                        
+                        Monitor.Text = "Status: Transporting cargo back to base..."
+                        SafeMoveTo(personalBase.CFrame + Vector3.new(0, 3, 0))
+                        task.wait(0.6)
+                    end
+                end
+            end
+        end)
+    end
+    Monitor.Text = "Status: Idle\nMode: Awaiting Input Commands"
+end)
+
+-- Toggle 2: Anti Knock Back Combat Mod
+CreateToggle("Anti Knock Back", function(state)
+    _G.AmantilloAntiKB = state
+    while _G.AmantilloAntiKB do
+        task.wait(0.2)
+        pcall(function()
+            local char = Player.Character
+            if char and char:FindFirstChild("HumanoidRootPart") then
+                for _, object in ipairs(char:GetChildren()) do
+                    if object:IsA("BodyVelocity") or object:IsA("BodyForce") or object:IsA("BodyPosition") then
+                        object:Destroy() -- Negates incoming kinetic velocity parameters from attacks
+                    end
+                end
+            end
+        end)
+    end
+end)
+
+-- Toggle 3: Auto Treadmill Fitness Loop
+CreateToggle("Auto Treadmill Loop", function(state)
+    _G.AmantilloTreadmill = state
+    while _G.AmantilloTreadmill do
+        task.wait(1.5)
+        pcall(function()
+            local zone = workspace:FindFirstChild("Treadmills") or workspace:FindFirstChild("TrainingZones")
+            if zone and Player.Character and Player.Character:FindFirstChild("HumanoidRootPart") then
+                local platform = zone:FindFirstChildWhichIsA("BasePart") or zone
+                SafeMoveTo(platform.CFrame + Vector3.new(0, 2, 0))
+            end
+        end)
+    end
+end)
+
+-- Render Notification
+game:GetService("StarterGui"):SetCore("SendNotification", {
+    Title = "Amantillo Compiler",
+    Text = "Script engine generated successfully. Panel opened.",
+    Duration = 4
+})
